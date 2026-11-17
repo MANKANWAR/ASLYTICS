@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASLytics — On-Device Multilingual Group Captioning (NVIDIA Parakeet AI)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-theme="high-contrast-dark" data-font-scale="normal">
+  <!-- Visual Alert Flash Banner for Name-Calls & Overlapping Speech -->
+  <div id="visualAlertBanner" class="visual-alert-banner hidden" role="alert" aria-live="assertive">
+    <span id="visualAlertIcon" class="alert-icon">🔔</span>
+    <span id="visualAlertText">Direct mention detected!</span>
+    <button id="dismissAlertBtn" class="btn-ghost-sm" type="button">Dismiss</button>
+  </div>
+
+  <header class="app-header">
+    <div class="brand-block">
+      <div class="logo-mark" aria-hidden="true">🤟</div>
+      <div>
+        <h1>ASLytics <span class="badge-nvidia">NVIDIA Parakeet On-Device</span></h1>
+        <p class="subtitle">Multilingual Group Conversation &amp; ASL Gloss Accessibility for the Deaf &amp; Hard-of-Hearing Community</p>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <div class="status-pill" id="offlineBadge" title="100% Local On-Device Inference — Zero Cloud Audio Upload">
+        <span class="status-dot"></span>
+        <span id="engineBackendLabel">On-Device: Parakeet-TDT 0.6B v3</span>
+      </div>
+
+      <label class="control-inline" for="fontScaleSelect">
+        <span>Text Size</span>
+        <select id="fontScaleSelect" aria-label="Caption text size">
+          <option value="normal">Standard (100%)</option>
+          <option value="large">Large Print (125%)</option>
+          <option value="xlarge">Extra Large (150%)</option>
+        </select>
+      </label>
+
+      <button id="contrastToggleBtn" class="btn-secondary" type="button" aria-label="Toggle High Contrast Daylight/Dark theme">
+        ☀️ / 🌙 Contrast
+      </button>
+      <a href="/api/export.vtt" class="btn-secondary" download="aslytics_group_session.vtt">
+        ⬇ Export .VTT
+      </a>
+    </div>
+  </header>
+
+  <main class="workspace-grid">
+    <!-- Left Column: 360° Group Table Radar + On-Device Model & Watchword Controls -->
+    <section class="left-panel" aria-label="Spatial Speaker Radar and Model Settings">
+      <div class="card radar-card">
+        <div class="card-header">
+          <h2>360° Spatial Group Table Radar</h2>
+          <span id="activeDirectionPill" class="direction-pill">Waiting for speaker…</span>
+        </div>
+        <p class="card-hint">
+          Shows <strong>who</strong> is speaking, <strong>where</strong> to look around the table, and alerts when multiple voices overlap.
+        </p>
+
+        <div class="radar-stage">
+          <svg id="groupRadarSvg" viewBox="0 0 340 340" role="img" aria-label="360 degree seating radar around conversation table">
+            <!-- Outer directional rings -->
+            <circle cx="170" cy="170" r="145" class="radar-ring-outer" />
+            <circle cx="170" cy="170" r="98" class="radar-ring-mid" />
+            <line x1="170" y1="25" x2="170" y2="315" class="radar-axis" />
+            <line x1="25" y1="170" x2="315" y2="170" class="radar-axis" />
+            <!-- Conference Table Center -->
+            <circle cx="170" cy="170" r="56" class="radar-table" />
+            <text x="170" y="166" text-anchor="middle" class="radar-table-label">GROUP</text>
+            <text x="170" y="182" text-anchor="middle" class="radar-table-sub">TABLE</text>
+            <!-- Dynamic Beam & Speaker Nodes Group -->
+            <g id="radarBeamLayer"></g>
+            <g id="radarSpeakersLayer"></g>
+            <!-- D/HoH User Seat at 6 o'clock (180 deg) -->
+            <g transform="translate(170, 305)">
+              <rect x="-42" y="-14" width="84" height="26" rx="13" class="user-seat-pill" />
+              <text x="0" y="3" text-anchor="middle" class="user-seat-text">YOU (6 o'clock)</text>
+            </g>
+          </svg>
+        </div>
+
+        <div id="speakerLegendList" class="speaker-legend-list"></div>
+      </div>
+
+      <!-- On-Device Model & Accessibility Configuration -->
+      <div class="card config-card">
+        <h2>On-Device AI &amp; Accessibility Settings</h2>
+        <div class="form-group">
+          <label for="modelSelect">NVIDIA On-Device Model</label>
+          <select id="modelSelect">
+            <option value="parakeet-tdt-0.6b-v3">NVIDIA Parakeet-TDT 0.6B v3 (25-Lang FastConformer)</option>
+            <option value="parakeet-tdt-0.6b-v2">NVIDIA Parakeet-TDT 0.6B v2 (English Ultra-Fast)</option>
+            <option value="canary-1b-v2">NVIDIA Canary 1B v2 (Multilingual AST + ASR)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="targetLangSelect">Translate Group To</label>
+            <select id="targetLangSelect">
+              <option value="en">English (en)</option>
+              <option value="es">Español (es)</option>
+              <option value="fr">Français (fr)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="scenarioSelect">Group Scenario</label>
+            <select id="scenarioSelect">
+              <option value="multilingual_standup">Multilingual Team Standup (EN/ES/FR/DE)</option>
+              <option value="family_dinner">Family Dinner Table (EN/Punjabi/Hindi)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="watchwordsInput">Visual Alert Watchwords (Name / Keywords)</label>
+          <input id="watchwordsInput" type="text" value="Alex, everyone, question, urgent" />
+        </div>
+
+        <div class="toggle-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="toggleAslGloss" checked />
+            <span>Show ASL Gloss &amp; Facial NMM Grammar Bar</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="toggleWordTimings" checked />
+            <span>Show Parakeet TDT Word Timestamps</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Live Group Conversation Stream + Interactive Turn Injector & D/HoH Reply Board -->
+    <section class="right-panel" aria-label="Live Group Transcript Stream">
+      <div class="card stream-header-bar">
+        <div>
+          <h2 id="scenarioTitleHeading">Multilingual Product Team Standup</h2>
+          <p id="scenarioDescText" class="card-hint">
+            Real-time speaker diarization, inline translation, overlap alerts, and ASL Gloss.
+          </p>
+        </div>
+        <div class="playback-controls">
+          <button id="stepTurnBtn" class="btn-secondary" type="button">▶ Step Next Turn</button>
+          <button id="playAllBtn" class="btn-primary" type="button">⏩ Play Full Group Session</button>
+        </div>
+      </div>
+
+      <!-- Transcript Stream Container -->
+      <div id="transcriptStream" class="transcript-stream" role="log" aria-live="polite"></div>
+
+      <!-- Interactive Group Utterance Composer + D/HoH Visual Reply Bar -->
+      <div class="card composer-card">
+        <div class="composer-tabs">
+          <h3>Simulate or Speak a Live Group Turn</h3>
+          <button id="micCaptureBtn" class="btn-mic" type="button">🎙️ Live Mic Input</button>
+        </div>
+        <form id="addTurnForm" class="composer-grid">
+          <input id="customSpeakerName" type="text" placeholder="Speaker Name (e.g. Priya)" value="Priya (Eng)" required />
+          <select id="customSpeakerAngle" aria-label="Speaker seat position">
+            <option value="0">12 o'clock (Across Table)</option>
+            <option value="65">2 o'clock (Front-Right)</option>
+            <option value="115">4 o'clock (Back-Right)</option>
+            <option value="265">9 o'clock (Left Side)</option>
+            <option value="295">10 o'clock (Front-Left)</option>
+          </select>
+          <select id="customSpeakerLang" aria-label="Spoken language">
+            <option value="en">English (en)</option>
+            <option value="es">Spanish (es)</option>
+            <option value="fr">French (fr)</option>
+            <option value="de">German (de)</option>
+            <option value="pa">Punjabi (pa)</option>
+            <option value="hi">Hindi (hi)</option>
+          </select>
+          <input id="customUtteranceText" type="text" class="utterance-input" placeholder="Type or speak what a group member says (try mentioning 'Alex' or ending with '?')…" required />
+          <button type="submit" class="btn-primary">Transcribe Turn</button>
+        </form>
+
+        <!-- D/HoH Participant Quick Reply / Floor Request -->
+        <div class="dhh-reply-bar">
+          <span class="reply-label">🖐️ Your Turn (Speak/Flash to Group):</span>
+          <input id="dhhQuickReplyInput" type="text" placeholder="Type your message to display &amp; speak aloud to the group…" />
+          <button id="speakToGroupBtn" class="btn-accent" type="button">📢 Speak &amp; Show Card</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

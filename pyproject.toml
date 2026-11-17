@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aslytics"
+version = "0.2.0"
+description = "On-device multilingual group conversation transcription and visual accessibility platform for the Deaf and Hard of Hearing community, powered by NVIDIA Parakeet."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Mankanwar Singh" },
+    { name = "ASLytics Open Source Contributors" }
+]
+keywords = [
+    "accessibility",
+    "deaf",
+    "hard-of-hearing",
+    "asr",
+    "nvidia-parakeet",
+    "parakeet-tdt",
+    "canary",
+    "sortformer",
+    "speaker-diarization",
+    "multilingual",
+    "on-device-ai",
+    "asl-gloss"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+onnx = [
+    "onnxruntime>=1.18.0",
+    "onnx-asr>=0.4.0",
+    "sounddevice>=0.4.6",
+    "soundfile>=0.12.1",
+]
+mlx = [
+    "parakeet-mlx>=0.2.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sounddevice>=0.4.6",
+]
+nemo = [
+    "torch>=2.2.0",
+    "torchaudio>=2.2.0",
+    "nemo_toolkit[asr]>=2.1.0",
+]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+aslytics = "aslytics.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/MANKANWAR/ASLYTICS"
+Repository = "https://github.com/MANKANWAR/ASLYTICS"
+Issues = "https://github.com/MANKANWAR/ASLYTICS/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aslytics*"]

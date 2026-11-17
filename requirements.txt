@@ -1,0 +1,17 @@
+# Core runtime (zero heavy cloud dependencies; runs out of the box)
+numpy>=1.24.0
+
+# Optional On-Device Backends (uncomment based on your hardware target):
+# --- Cross-Platform CPU / Edge ONNX Runtime (Recommended for Laptops & Mini-PCs) ---
+# onnxruntime>=1.18.0
+# onnx-asr>=0.4.0
+# sounddevice>=0.4.6
+# soundfile>=0.12.1
+
+# --- Apple Silicon M1/M2/M3/M4 Hardware Acceleration ---
+# parakeet-mlx>=0.2.0
+
+# --- NVIDIA GPU Full NeMo + Sortformer Diarization Stack ---
+# torch>=2.2.0
+# torchaudio>=2.2.0
+# nemo_toolkit[asr]>=2.1.0
